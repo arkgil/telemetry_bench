@@ -28,18 +28,6 @@ defmodule Benchmark do
     end
   end
 
-  defp generate_events(count) do
-    for i <- 1..count do
-      [:benchmark, :"#{i}"]
-    end
-  end
-
-  defp install_handlers(count, events) do
-    for i <- 1..count do
-      :telemetry.attach_many(i, events, &__handle_event__/4, nil)
-    end
-  end
-
   defp start_tasks(count, iterations, events) do
     events = Stream.cycle(events)
 

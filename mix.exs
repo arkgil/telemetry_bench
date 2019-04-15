@@ -20,13 +20,16 @@ defmodule TelemetryBench.MixProject do
 
   defp deps do
     [
-      {:telemetry, path: "../telemetry/telemetry"}
+      {:telemetry, github: "beam-telemetry/telemetry"},
+      {:benchee, "~> 1.0"}
     ]
   end
 
   defp aliases() do
     [
-      bench: "run bench.exs"
+      bench_v1: "run bench_v1.exs",
+      bench_v2: "run bench_v2.exs",
+      bench_v3: "run bench_v3.exs"
     ]
   end
 end
