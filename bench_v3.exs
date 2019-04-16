@@ -9,10 +9,10 @@ defmodule Benchmark do
     end
 
     {counter, tasks} = start_tasks(config.processes, events)
-    IO.puts("Started #{length(tasks)} tasks. Warming up..")
+    IO.puts(:stderr, "Started #{length(tasks)} tasks. Warming up..")
     Process.sleep(config.warmup * 1000)
     :counters.put(counter, 1, 0)
-    IO.puts("Running..")
+    IO.puts(:stderr, "Running..")
     Process.sleep(config.duration * 1000)
     stop_tasks(tasks)
 
@@ -40,7 +40,7 @@ defmodule Benchmark do
 
   defp start_tasks(count, events) do
     counter = :counters.new(1, [:write_concurrency])
-    event = [event | _]
+    [event | _] = events
 
     tasks =
       for _ <- 1..count do
@@ -100,6 +100,7 @@ config =
     Map.new(config)
   )
 
-IO.puts("Starting benchmark with config #{inspect(config)}")
+IO.puts(:stderr, "Starting benchmark with config #{inspect(config)}")
 result = Benchmark.run(config)
-IO.puts("Done. Number of iterations: #{result}")
+IO.puts(:stderr, "Done. Number of iterations: #{result}")
+IO.puts("#{result}")
