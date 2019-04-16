@@ -2,19 +2,27 @@ defmodule Benchmark do
   def run(config) do
     events = generate_events(config.events)
     install_handlers(config.handlers, events)
+
     if config.lcnt do
       :lcnt.start()
       :lcnt.clear()
     end
+
     {counter, tasks} = start_tasks(config.processes, events)
-    IO.puts("Started #{length(tasks)} tasks. Running..")
+    IO.puts("Started #{length(tasks)} tasks. Warming up..")
+    Process.sleep(config.warmup * 1000)
+    :counters.put(counter, 1, 0)
+    IO.puts("Running..")
     Process.sleep(config.duration * 1000)
     stop_tasks(tasks)
+
     if config.lcnt do
       :lcnt.collect()
       :lcnt.conflicts()
+      :lcnt.inspect(:db_tab)
       :lcnt.stop()
     end
+
     :counters.get(counter, 1)
   end
 
@@ -32,12 +40,15 @@ defmodule Benchmark do
 
   defp start_tasks(count, events) do
     counter = :counters.new(1, [:write_concurrency])
+    event = [event | _]
+
     tasks =
-      for {_, event} <- Enum.zip(1..count, events) do
-      fun = fn -> :telemetry.execute(event, %{}, %{}) end
-      # fun = fn -> fact(20) end
-      spawn_link(fn -> execute_task(fun, counter) end)
-    end
+      for _ <- 1..count do
+        fun = fn -> :telemetry.execute(event, %{}, %{}) end
+        # fun = fn -> fact(20) end
+        spawn_link(fn -> execute_task(fun, counter) end)
+      end
+
     {counter, tasks}
   end
 
@@ -70,9 +81,10 @@ end
       handlers: :integer,
       events: :integer,
       duration: :integer,
-      lcnt: :boolean
+      lcnt: :boolean,
+      warmup: :integer
     ],
-    aliases: [p: :processes, h: :handlers, e: :events, d: :duration]
+    aliases: [p: :processes, h: :handlers, e: :events, d: :duration, w: :warmup]
   )
 
 config =
@@ -82,6 +94,7 @@ config =
       handlers: 1,
       events: 1,
       duration: 60,
+      warmup: 10,
       lcnt: false
     },
     Map.new(config)
